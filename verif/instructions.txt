@@ -1,7 +1,7 @@
-lw x4,1(x0)
-and x5,x4,x1
-sw x5,0(x0)
-lw x6,0(x0)
-add x7,x4,x4
-add x7,x7,x4
-beq x6,x0,-4
+addi x1,x0,8
+srai x1,x1,1
+addi x2,x0,6
+srli x2,x2,1
+slli x2,x2,2
+slt x3,x2,x1
+slti x4,x1,10

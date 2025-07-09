@@ -5,27 +5,42 @@ module imm_Gen (
     output logic [31:0] Imm_out
 );
 
+    logic [6:0] opcode;
+    logic [2:0] funct3;
 
-  always_comb
-    case (inst_code[6:0])
-      7'b0000011:  /*I-type load part*/
-      Imm_out = {inst_code[31] ? 20'hFFFFF : 20'b0, inst_code[31:20]};
+    always_comb begin
+        // Atribui um valor padrão no início para cobrir todos os casos
+        Imm_out = 32'b0;
 
-      7'b0100011:  /*S-type*/
-      Imm_out = {inst_code[31] ? 20'hFFFFF : 20'b0, inst_code[31:25], inst_code[11:7]};
+        // Extrai os campos relevantes da instrução para as variáveis locais.
+        opcode = inst_code[6:0];
+        funct3 = inst_code[14:12];
 
-      7'b1100011:  /*B-type*/
-      Imm_out = {
-        inst_code[31] ? 19'h7FFFF : 19'b0,
-        inst_code[31],
-        inst_code[7],
-        inst_code[30:25],
-        inst_code[11:8],
-        1'b0
-      };
+        if (opcode == 7'b0000011) begin // I-type para instruções 'load'
+            // Extensão de sinal dos 12 bits do imediato
+            Imm_out = {{20{inst_code[31]}}, inst_code[31:20]};
 
-      default: Imm_out = {32'b0};
+        end else if (opcode == 7'b0010011) begin // I-type para operações aritméticas/lógicas
+            if (funct3 == 3'b001 || funct3 == 3'b101) begin // SLLI, SRLI, SRAI
+                Imm_out = {27'b0, inst_code[24:20]};
+            end else begin // ADDI, SLTI, etc.
+                Imm_out = {{20{inst_code[31]}}, inst_code[31:20]};
+            end
 
-    endcase
+        end else if (opcode == 7'b0100011) begin // S-type para instruções 'store'
+            // Monta o imediato de 12 bits com extensão de sinal a partir de dois campos.
+            Imm_out = {{20{inst_code[31]}}, inst_code[31:25], inst_code[11:7]};
+
+        end else if (opcode == 7'b1100011) begin // B-type para instruções 'branch'
+            // Monta o imediato de 13 bits (com o LSB implícito como 0) com extensão de sinal.
+            Imm_out = { {19{inst_code[31]}}, // Bit 12 (sinal)
+                        inst_code[31],       // Bit 11
+                        inst_code[7],        // Bits 10:5
+                        inst_code[30:25],    // Bits 4:1
+                        inst_code[11:8],     // Bit 0 (implícito)
+                        1'b0
+                      };
+        end
+    end
 
 endmodule

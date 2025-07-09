@@ -1,40 +1,59 @@
 `timescale 1ns / 1ps
 
 module Controller (
-    //Input
-    input logic [6:0] Opcode,
-    //7-bit opcode field from the instruction
+    // Entrada
+    input  logic [6:0] Opcode,   // Campo opcode de 7 bits da instrução
 
-    //Outputs
-    output logic ALUSrc,
-    //0: The second ALU operand comes from the second register file output (Read data 2); 
-    //1: The second ALU operand is the sign-extended, lower 16 bits of the instruction.
-    output logic MemtoReg,
-    //0: The value fed to the register Write data input comes from the ALU.
-    //1: The value fed to the register Write data input comes from the data memory.
-    output logic RegWrite, //The register on the Write register input is written with the value on the Write data input 
-    output logic MemRead,  //Data memory contents designated by the address input are put on the Read data output
-    output logic MemWrite, //Data memory contents designated by the address input are replaced by the value on the Write data input.
-    output logic [1:0] ALUOp,  //00: LW/SW; 01:Branch; 10: Rtype
-    output logic Branch  //0: branch is not taken; 1: branch is taken
+    // Saídas
+    output logic       ALUSrc,
+    output logic       MemtoReg,
+    output logic       RegWrite,
+    output logic       MemRead,
+    output logic       MemWrite,
+    output logic [1:0] ALUOp,
+    output logic       Branch
 );
 
-  logic [6:0] R_TYPE, LW, SW, BR;
+    always_comb begin
+        // Inicia todos os sinais de controle em um estado padrão "inativo".
+        {ALUSrc, MemtoReg, RegWrite, MemRead, MemWrite, Branch, ALUOp} = '0;
 
-  assign R_TYPE = 7'b0110011;  //add,and
-  assign I_TYPE = 7'b0010011;  //addi
-  assign LW = 7'b0000011;  //lw
-  assign SW = 7'b0100011;  //sw
-  assign BR = 7'b1100011;  //beq
+        // Usa uma instrução 'case' para decodificar o opcode.
+        case (Opcode)
+            7'b0110011: begin // Instruções Tipo-R (add, sub, etc.)
+                RegWrite = 1'b1;
+                ALUOp    = 2'b10;
+            end
 
-  assign ALUSrc = (Opcode == LW || Opcode == SW || Opcode == I_TYPE);
-  assign MemtoReg = (Opcode == LW);
-  assign RegWrite = (Opcode == R_TYPE || Opcode == LW  || Opcode == I_TYPE);
-  assign MemRead = (Opcode == LW);
-  assign MemWrite = (Opcode == SW);
+            7'b0010011: begin // Instruções Tipo-I (addi, slti, etc.)
+                ALUSrc   = 1'b1;
+                RegWrite = 1'b1;
+                ALUOp    = 2'b10;
+            end
 
-  assign ALUOp[0] = (Opcode == BR || Opcode == I_TYPE );
-  assign ALUOp[1] = (Opcode == I_TYPE || Opcode == R_TYPE);
-  
-  assign Branch = (Opcode == BR);
+            7'b0000011: begin // Instrução LW (Load Word)
+                ALUSrc   = 1'b1;
+                MemtoReg = 1'b1;
+                RegWrite = 1'b1;
+                MemRead  = 1'b1;
+                ALUOp    = 2'b00;
+            end
+
+            7'b0100011: begin // Instrução SW (Store Word)
+                ALUSrc   = 1'b1;
+                MemWrite = 1'b1;
+                ALUOp    = 2'b00;
+            end
+
+            7'b1100011: begin // Instrução BEQ (Branch if Equal)
+                Branch = 1'b1;
+                ALUOp  = 2'b01;
+            end
+
+            default: begin
+                {ALUSrc, MemtoReg, RegWrite, MemRead, MemWrite, Branch, ALUOp} = '0;
+            end
+        endcase
+    end
+
 endmodule
