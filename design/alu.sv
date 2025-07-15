@@ -18,7 +18,7 @@ module alu#(
 
         // A quantidade de deslocamento para operações de shift é extraída dos 5 bits menos significativos de SrcB.
         shift_amount = SrcB[4:0];
-.
+
         if (Operation == 4'b0000) begin      // AND
             ALUResult = SrcA & SrcB;
         end
@@ -41,21 +41,27 @@ module alu#(
             ALUResult = SrcA - SrcB;
         end
         else if (Operation == 4'b1000) begin // Equal (para BEQ)
-            ALUResult = (SrcA == SrcB); // Atribuição direta do booleano (resulta em 1 ou 0)
+            ALUResult = '0;
+            ALUResult[0] = (SrcA == SrcB);
         end
         else if (Operation == 4'b1001) begin // Not Equal (para BNE)
-            ALUResult = (SrcA != SrcB);
+            ALUResult = '0;
+            ALUResult[0] = (SrcA != SrcB);
         end
         else if (Operation == 4'b1010) begin // SRA (Shift Right Arithmetic)
             // O casting para $signed garante que o bit de sinal seja propagado
             ALUResult = $signed(SrcA) >>> shift_amount;
         end
         else if (Operation == 4'b1100) begin // SLT (Set Less Than, com sinal)
-            ALUResult = ($signed(SrcA) < $signed(SrcB));
+            ALUResult = ($signed(SrcA) < $signed(SrcB)) ? 32'd1 : 32'd0;
         end
         else if (Operation == 4'b1101) begin // BGE (Branch Greater or Equal, com sinal)
-            ALUResult = ($signed(SrcA) >= $signed(SrcB));
+            ALUResult = '0;
+            ALUResult[0] = ($signed(SrcA) >= $signed(SrcB));
+        end
+        else if (Operation == 4'b1110) begin // BLT (Branch Less Than)
+            ALUResult = '0;
+            ALUResult[0] = ($signed(SrcA) < $signed(SrcB));
         end
     end
-
 endmodule

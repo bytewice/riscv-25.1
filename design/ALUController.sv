@@ -16,7 +16,15 @@ module ALUController (
         unique case (ALUOp)
             2'b00: Operation = 4'b0010;  // LW/SW: ADD para cálculo de endereço
 
-            2'b01: Operation = 4'b1000;  // Branch: Operação de comparação/subtração
+            2'b01: begin // Instruções de desvio (Branch)
+                case (Funct3)
+                    3'b000: Operation = 4'b0110; // BEQ (SUB)
+                    3'b001: Operation = 4'b1001; // BNE
+                    3'b100: Operation = 4'b1100; // BLT
+                    3'b101: Operation = 4'b1101; // BGE
+                    default: Operation = 4'b0000;
+                endcase
+            end
 
             2'b10: begin // Instruções do Tipo-R e Tipo-I
                 case (Funct3)

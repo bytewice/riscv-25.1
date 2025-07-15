@@ -45,7 +45,7 @@ module Controller (
                 ALUOp    = 2'b00;
             end
 
-            7'b1100011: begin // Instrução BEQ (Branch if Equal)
+            7'b1100011: begin // Instruções de desvio (BEQ, BNE, BLT, BGE)
                 Branch = 1'b1;
                 ALUOp  = 2'b01;
             end
