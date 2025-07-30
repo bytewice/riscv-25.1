@@ -1,7 +1,8 @@
 `timescale 1ns / 1ps
 
 module tb_top;
-  // Clock and reset signal declaration
+
+  //clock and reset signal declaration
   logic tb_clk, reset;
   logic [31:0] tb_WB_Data;
 
@@ -37,7 +38,7 @@ module tb_top;
     #(CLKPERIOD);
     reset = 0;
 
-    #(CLKPERIOD * 150);
+    #(CLKPERIOD * 50);
 
     $stop;
   end
@@ -46,18 +47,18 @@ module tb_top;
   always @(posedge tb_clk) begin
     if (!reset) begin
       if (reg_write_sig && reg_num != 0) begin
-        $display("Time %0t: REG[x%02d] <= 0x%08X (%10d) [BIN: %032b]", 
-                $time, reg_num, reg_data, reg_data, reg_data);
+        $display("%0t: Register [%0d] written with value: [%0X] | [%0d]\n", 
+                 $time, reg_num, reg_data, reg_data);
       end
 
       if (wr) begin
-        $display("Time %0t: MEM[%03d] <= 0x%08X (%10d) [WRITE]", 
-                $time, addr, wr_data, wr_data);
+        $display("%0t: Memory [%0d] written with value: [%0X] | [%0d]\n", 
+                 $time, addr, wr_data, wr_data);
       end
 
       if (rd) begin
-        $display("Time %0t: MEM[%03d] => 0x%08X (%10d) [READ]", 
-                $time, addr, rd_data, rd_data);
+        $display("%0t: Memory [%0d] read with value: [%0X] | [%0d]\n", 
+                 $time, addr, rd_data, rd_data);
       end
     end
   end
@@ -66,8 +67,8 @@ module tb_top;
   always @(*) begin
     if (!reset) begin
       if (reg_write_sig && reg_num != 0) begin
-        $display("Time %0t: [ALT] REG[x%02d] = 0x%08X (%10d)", 
-                $time, reg_num, reg_data, reg_data);
+        $display("%0t: Register [%0d] written with value: [%0X] | [%0d]\n", 
+                 $time, reg_num, reg_data, reg_data);
       end
     end
   end
