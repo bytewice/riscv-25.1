@@ -32,7 +32,7 @@ Seu objetivo é implementar as instruções restantes listadas abaixo:
 | 4  | `BLT`     |      ✅     |    ✅    |      ✅      |
 | 5  | `BGE`     |      ✅     |    ✅    |      ✅      |
 | 6  | `LB`      |      ✅     |    ✅    |      ✅      |
-| 7  | `LH`      |      ✅     |    ✅    |      ✅      |
+| 7  | `LH`      |      ✅     |    ❌    |      ❌      |
 | 8  | `LBU`     |      ✅     |    ✅    |      ❌      |
 | 9  | `SB`      |      ✅     |    ✅    |      ✅      |
 | 10 | `SH`      |      ✅     |    ✅    |      ✅      |
@@ -45,7 +45,7 @@ Seu objetivo é implementar as instruções restantes listadas abaixo:
 | 17 | `SLT`     |      ✅     |    ✅    |      ✅      |
 | 18 | `XOR`     |      ✅     |    ✅    |      ✅      |
 | 19 | `OR`      |      ✅     |    ✅    |      ✅      |
-| 20 | `HALT`    |      ❌     |    ❌    |      ❌      |
+| 20 | `HALT`    |      ✅     |    ❌    |      ❌      |
 
 ### Observações
 
