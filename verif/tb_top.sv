@@ -1,8 +1,7 @@
 `timescale 1ns / 1ps
 
 module tb_top;
-
-  //clock and reset signal declaration
+  // Clock and reset signal declaration
   logic tb_clk, reset;
   logic [31:0] tb_WB_Data;
 
@@ -38,27 +37,42 @@ module tb_top;
     #(CLKPERIOD);
     reset = 0;
 
-    #(CLKPERIOD * 50);
+    #(CLKPERIOD * 150);
 
     $stop;
   end
 
-  always_comb begin : MEMORY
-    if (wr && ~rd)
-      $display($time, ": Memory [%d] written with value: [%X] | [%d]\n", addr, wr_data, wr_data);
+  // Monitor sincronizado com o clock
+  always @(posedge tb_clk) begin
+    if (!reset) begin
+      if (reg_write_sig && reg_num != 0) begin
+        $display("Time %0t: REG[x%02d] <= 0x%08X (%10d) [BIN: %032b]", 
+                $time, reg_num, reg_data, reg_data, reg_data);
+      end
 
-    else if (rd && ~wr)
-      $display($time, ": Memory [%d] read with value: [%X] | [%d]\n", addr, rd_data, rd_data);
-  end : MEMORY
+      if (wr) begin
+        $display("Time %0t: MEM[%03d] <= 0x%08X (%10d) [WRITE]", 
+                $time, addr, wr_data, wr_data);
+      end
 
-  always_comb begin : REGISTER
-    if (reg_write_sig)
-      $display(
-          $time, ": Register [%d] written with value: [%X] | [%d]\n", reg_num, reg_data, reg_data
-      );
-  end : REGISTER
+      if (rd) begin
+        $display("Time %0t: MEM[%03d] => 0x%08X (%10d) [READ]", 
+                $time, addr, rd_data, rd_data);
+      end
+    end
+  end
 
-  //clock generator
+  // Monitor alternativo assíncrono
+  always @(*) begin
+    if (!reset) begin
+      if (reg_write_sig && reg_num != 0) begin
+        $display("Time %0t: [ALT] REG[x%02d] = 0x%08X (%10d)", 
+                $time, reg_num, reg_data, reg_data);
+      end
+    end
+  end
+
+  // clock generator
   always #(CLKDELAY) tb_clk = ~tb_clk;
 
 endmodule

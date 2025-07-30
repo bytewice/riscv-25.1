@@ -6,7 +6,7 @@ module riscv #(
     input logic clk,
     reset,  // clock and reset signals
     output logic [31:0] WB_Data,  // The ALU_Result
-
+    output logic Halted,          
     output logic [4:0] reg_num,
     output logic [31:0] reg_data,
     output logic reg_write_sig,
@@ -25,6 +25,9 @@ module riscv #(
   logic [6:0] Funct7;
   logic [2:0] Funct3;
   logic [3:0] Operation;
+  logic Jump;
+  logic [1:0] JumpType;
+  logic Halt;
 
   Controller c (
       opcode,
@@ -34,7 +37,10 @@ module riscv #(
       MemRead,
       MemWrite,
       ALUop,
-      Branch
+      Branch,
+      Jump,
+      JumpType,
+      Halt
   );
 
   ALUController ac (
@@ -53,6 +59,9 @@ module riscv #(
       MemWrite,
       MemRead,
       Branch,
+      Jump,
+      Halt,
+      JumpType,
       ALUop,
       Operation,
       opcode,
@@ -60,6 +69,7 @@ module riscv #(
       Funct3,
       ALUop_Reg,
       WB_Data,
+      Halted,  
       reg_num,
       reg_data,
       reg_write_sig,

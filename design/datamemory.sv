@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module datamemory #(
     parameter DM_ADDRESS = 9,
     parameter DATA_W = 32
@@ -19,10 +17,6 @@ module datamemory #(
   logic [31:0] Dataout;
   logic [ 3:0] Wr;
 
-  // Align address to word boundary
-  assign raddress = {22'b0, a};                      // Word-aligned read
-  assign waddress = {22'b0, {a[8:2], 2'b00}};         // Word-aligned write
-
   Memoria32Data mem32 (
       .raddress(raddress),
       .waddress(waddress),
@@ -33,6 +27,9 @@ module datamemory #(
   );
 
   always_ff @(*) begin
+    raddress = {{22{1'b0}}, a[8:2], 2'b00};                      // Word-aligned read
+    waddress = {{22{1'b0}}, a[8:2], 2'b00};
+    
     // Default values
     Datain = wd;
     Wr = 4'b0000;
@@ -65,22 +62,46 @@ module datamemory #(
         3'b010: begin // LW
           rd = Dataout;
         end
+        3'b101: begin // LHU
+          case (a[1])
+            1'b0: rd = {16'b0, Dataout[15:0]};
+            1'b1: rd = {16'b0, Dataout[31:16]};
+          endcase
+        end
         default: rd = 32'b0;
       endcase
     end else if (MemWrite) begin
       case (Funct3)
         3'b000: begin // SB
           case (a[1:0])
-            2'b00: begin Wr = 4'b0001; Datain = {24'b0, wd[7:0]}; end
-            2'b01: begin Wr = 4'b0010; Datain = {16'b0, wd[7:0], 8'b0}; end
-            2'b10: begin Wr = 4'b0100; Datain = {8'b0, wd[7:0], 16'b0}; end
-            2'b11: begin Wr = 4'b1000; Datain = {wd[7:0], 24'b0}; end
+            2'b00: begin 
+              Wr = 4'b0001; 
+              Datain = {Dataout[31:8], wd[7:0]}; 
+            end
+            2'b01: begin 
+              Wr = 4'b0010; 
+              Datain = {Dataout[31:16], wd[7:0], Dataout[7:0]}; 
+            end
+            2'b10: begin 
+              Wr = 4'b0100; 
+              Datain = {Dataout[31:24], wd[7:0], Dataout[15:0]}; 
+            end
+            2'b11: begin
+              Wr = 4'b1000;
+              Datain = {wd[7:0], Dataout[23:0]};
+            end
           endcase
         end
         3'b001: begin // SH
           case (a[1])
-            1'b0: begin Wr = 4'b0011; Datain = {16'b0, wd[15:0]}; end
-            1'b1: begin Wr = 4'b1100; Datain = {wd[15:0], 16'b0}; end
+            1'b0: begin 
+              Wr = 4'b0011; 
+              Datain = {Dataout[31:16], wd[15:0]}; 
+            end
+            1'b1: begin 
+              Wr = 4'b1100; 
+              Datain = {wd[15:0], Dataout[15:0]}; 
+            end
           endcase
         end
         3'b010: begin // SW
@@ -88,8 +109,6 @@ module datamemory #(
           Datain = wd;
         end
         default: begin
-          Wr = 4'b0000;
-          Datain = 32'b0;
         end
       endcase
     end
