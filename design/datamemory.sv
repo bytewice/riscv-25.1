@@ -26,8 +26,8 @@ module datamemory #(
       .Wr(Wr)
   );
 
-  always_ff @(*) begin
-    raddress = {{22{1'b0}}, a[8:2], 2'b00};                      // Word-aligned read
+  always_comb begin
+    raddress = {{22{1'b0}}, a[8:2], 2'b00};                    
     waddress = {{22{1'b0}}, a[8:2], 2'b00};
     
     // Default values
@@ -68,7 +68,7 @@ module datamemory #(
             1'b1: rd = {16'b0, Dataout[31:16]};
           endcase
         end
-        default: rd = 32'b0;
+        default: rd = Dataout;
       endcase
     end else if (MemWrite) begin
       case (Funct3)
@@ -107,8 +107,6 @@ module datamemory #(
         3'b010: begin // SW
           Wr = 4'b1111;
           Datain = wd;
-        end
-        default: begin
         end
       endcase
     end
