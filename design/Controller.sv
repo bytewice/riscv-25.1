@@ -11,7 +11,7 @@ module Controller (
     output logic       MemRead,
     output logic       MemWrite,
     output logic [1:0] ALUOp,
-    output logic       Branch
+    output logic       Branch,
     output logic       Jump,
     output logic [1:0] JumpType,
     output logic       Halt
