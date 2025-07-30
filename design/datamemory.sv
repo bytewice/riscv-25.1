@@ -5,12 +5,12 @@ module datamemory #(
     parameter DATA_W = 32
 ) (
     input logic clk,
-    input logic MemRead,  // comes from control unit
-    input logic MemWrite,  // Comes from control unit
-    input logic [DM_ADDRESS - 1:0] a,  // Read / Write address - 9 LSB bits of the ALU output
-    input logic [DATA_W - 1:0] wd,  // Write Data
-    input logic [2:0] Funct3,  // bits 12 to 14 of the instruction
-    output logic [DATA_W - 1:0] rd  // Read Data
+    input logic MemRead,
+    input logic MemWrite,
+    input logic [DM_ADDRESS - 1:0] a,
+    input logic [DATA_W - 1:0] wd,
+    input logic [2:0] Funct3,
+    output logic [DATA_W - 1:0] rd
 );
 
   logic [31:0] raddress;
@@ -18,6 +18,10 @@ module datamemory #(
   logic [31:0] Datain;
   logic [31:0] Dataout;
   logic [ 3:0] Wr;
+
+  // Align address to word boundary
+  assign raddress = {22'b0, a};                      // Word-aligned read
+  assign waddress = {22'b0, {a[8:2], 2'b00}};         // Word-aligned write
 
   Memoria32Data mem32 (
       .raddress(raddress),
@@ -29,26 +33,63 @@ module datamemory #(
   );
 
   always_ff @(*) begin
-    raddress = {{22{1'b0}}, a};
-    waddress = {{22{1'b0}}, {a[8:2], {2{1'b0}}}};
+    // Default values
     Datain = wd;
     Wr = 4'b0000;
+    rd = 32'b0;
 
     if (MemRead) begin
       case (Funct3)
-        3'b010:  //LW
-        rd <= Dataout;
-        default: rd <= Dataout;
+        3'b000: begin // LB
+          case (a[1:0])
+            2'b00: rd = {{24{Dataout[7]}}, Dataout[7:0]};
+            2'b01: rd = {{24{Dataout[15]}}, Dataout[15:8]};
+            2'b10: rd = {{24{Dataout[23]}}, Dataout[23:16]};
+            2'b11: rd = {{24{Dataout[31]}}, Dataout[31:24]};
+          endcase
+        end
+        3'b100: begin // LBU
+          case (a[1:0])
+            2'b00: rd = {24'b0, Dataout[7:0]};
+            2'b01: rd = {24'b0, Dataout[15:8]};
+            2'b10: rd = {24'b0, Dataout[23:16]};
+            2'b11: rd = {24'b0, Dataout[31:24]};
+          endcase
+        end
+        3'b001: begin // LH
+          case (a[1])
+            1'b0: rd = {{16{Dataout[15]}}, Dataout[15:0]};
+            1'b1: rd = {{16{Dataout[31]}}, Dataout[31:16]};
+          endcase
+        end
+        3'b010: begin // LW
+          rd = Dataout;
+        end
+        default: rd = 32'b0;
       endcase
     end else if (MemWrite) begin
       case (Funct3)
-        3'b010: begin  //SW
-          Wr <= 4'b1111;
-          Datain <= wd;
+        3'b000: begin // SB
+          case (a[1:0])
+            2'b00: begin Wr = 4'b0001; Datain = {24'b0, wd[7:0]}; end
+            2'b01: begin Wr = 4'b0010; Datain = {16'b0, wd[7:0], 8'b0}; end
+            2'b10: begin Wr = 4'b0100; Datain = {8'b0, wd[7:0], 16'b0}; end
+            2'b11: begin Wr = 4'b1000; Datain = {wd[7:0], 24'b0}; end
+          endcase
+        end
+        3'b001: begin // SH
+          case (a[1])
+            1'b0: begin Wr = 4'b0011; Datain = {16'b0, wd[15:0]}; end
+            1'b1: begin Wr = 4'b1100; Datain = {wd[15:0], 16'b0}; end
+          endcase
+        end
+        3'b010: begin // SW
+          Wr = 4'b1111;
+          Datain = wd;
         end
         default: begin
-          Wr <= 4'b1111;
-          Datain <= wd;
+          Wr = 4'b0000;
+          Datain = 32'b0;
         end
       endcase
     end
