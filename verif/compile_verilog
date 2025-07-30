@@ -7,7 +7,7 @@
 ./../design/RegFile.sv
 ./../design/alu.sv
 ./../design/ALUController.sv
-./../design/BranchUnit.sv
+./../design/JumpBranchUnit.sv
 ./../design/Controller.sv
 ./../design/flopr.sv
 ./../design/ForwardingUnit.sv
